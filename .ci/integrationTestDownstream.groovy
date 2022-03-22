@@ -297,12 +297,12 @@ def runScript(Map params = [:]){
     log(level: 'INFO', text: "${label}")
     deleteDir()
     container('dind') {
-      sh 'docker version'
-      sh(script: "mkdir -p ${WORKSPACE}/bin && cp \$(command -v docker) ${WORKSPACE}/bin")
+      sh(label: 'Docker version', scrip: 'docker version')
+      sh(label: 'Copy Docker binary', script: "mkdir -p ${WORKSPACE}/bin && cp \$(command -v docker) ${WORKSPACE}/bin")
     }
     unstash "source"
-    filebeat(output: "docker-${dockerLogs}.log", archiveOnlyOnFail: true){
-      sh 'docker ps -a && docker images -a && docker volume ls && docker network ls'
+    //filebeat(output: "docker-${dockerLogs}.log", archiveOnlyOnFail: true){
+      sh(label: 'Docker containers summary', script: 'docker ps -a && docker images -a && docker volume ls && docker network ls')
       dir("${BASE_DIR}"){
         withEnv(env){
           withOtelEnv() {
@@ -311,7 +311,7 @@ def runScript(Map params = [:]){
           sh 'docker ps -a && docker images -a && docker volume ls && docker network ls'
         }
       }
-    }
+    //}
   }
 }
 
@@ -320,7 +320,7 @@ def wrappingup(label){
     def testResultsFolder = 'tests/results'
     def testResultsPattern = "${testResultsFolder}/*-junit*.xml"
     def labelFolder = normalise(label)
-    sh('make stop-env || echo 0')
+    sh(label: 'Stop Docker environment', script: 'make stop-env || echo 0')
     sh(label: 'Folder to aggregate test results from stages',
        script: "mkdir -p ${labelFolder}/${testResultsFolder} && cp -rf ${testResultsPattern} ${labelFolder}/${testResultsFolder}")
     archiveArtifacts(
