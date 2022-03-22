@@ -109,15 +109,15 @@ def runAllTests(){
 }
 
 def provisionEnvironment(){
-    dockerLogin(secret: "${DOCKERELASTIC_SECRET}", registry: "${DOCKER_REGISTRY}")
-    dir("${EC_DIR}/ansible"){
-      withTestEnv(){
-        sh(label: "Deploy Cluster", script: "make create-cluster")
-        sh(label: "Rename cluster-info folder", script: "mv build/cluster-info.html cluster-info-${getElasticStackVersion()}.html")
-        archiveArtifacts(allowEmptyArchive: true, artifacts: 'cluster-info-*')
-      }
+  dockerLogin(secret: "${DOCKERELASTIC_SECRET}", registry: "${DOCKER_REGISTRY}")
+  dir("${EC_DIR}/ansible"){
+    withTestEnv(){
+      sh(label: "Deploy Cluster", script: "make create-cluster")
+      sh(label: "Rename cluster-info folder", script: "mv build/cluster-info.html cluster-info-${getElasticStackVersion()}.html")
+      archiveArtifacts(allowEmptyArchive: true, artifacts: 'cluster-info-*')
     }
-    stash allowEmpty: true, includes: "${EC_DIR}/ansible/build/config_secrets.yml", name: "secrets-${getElasticStackVersion()}"
+  }
+  stash allowEmpty: true, includes: "${EC_DIR}/ansible/build/config_secrets.yml", name: "secrets-${getElasticStackVersion()}"
 }
 
 def runTest(test){
