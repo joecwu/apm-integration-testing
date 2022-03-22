@@ -295,11 +295,11 @@ def runScript(Map params = [:]){
   def dockerLogs = label.replace(":","_").replace(";","_").replace(" ","").replace("--","-")
   withGithubNotify(context: "${label}", isBlueOcean: true) {
     log(level: 'INFO', text: "${label}")
+    deleteDir()
     container('dind') {
       sh 'docker version'
       sh(script: "mkdir -p ${WORKSPACE}/bin && cp \$(command -v docker) ${WORKSPACE}/bin")
     }
-    deleteDir()
     unstash "source"
     filebeat(output: "docker-${dockerLogs}.log", archiveOnlyOnFail: true){
       sh 'docker ps -a && docker images -a && docker volume ls && docker network ls'
