@@ -11,7 +11,12 @@ import groovy.transform.Field
 @Field def integrationTestsGen
 
 pipeline {
-  agent { label 'linux && immutable' }
+  agent {
+    kubernetes {
+      defaultContainer 'kibana-yarn'
+      yaml libraryResource(resource: 'pods/python.yml')
+    }
+  }
   environment {
     BASE_DIR="src/github.com/elastic/apm-integration-testing"
     REPO="git@github.com:elastic/apm-integration-testing.git"
@@ -189,21 +194,23 @@ class IntegrationTestingParallelTaskGenerator extends DefaultParallelTaskGenerat
   */
   public Closure generateStep(x, y){
     return {
-      steps.node('linux && immutable'){
-        def env = ["APM_SERVER_BRANCH=${y}",
-          "${steps.agentMapping.envVar(tag)}=${x}",
-          "REUSE_CONTAINERS=true",
-          "ENABLE_ES_DUMP=true",
-          "PATH=${steps.env.WORKSPACE}/${steps.env.BASE_DIR}/.ci/scripts:${steps.env.PATH}",
-          "TMPDIR=${steps.env.WORKSPACE}"
-          ]
-        def label = "${tag}-${x}-${y}"
-        try{
-          saveResult(x, y, 0)
-          steps.runScript(label: label, agentType: tag, env: env)
-          saveResult(x, y, 1)
-        } finally {
-          steps.wrappingup(label)
+      steps.podTemplate(yaml: steps.libraryResource(resource: 'pods/dind-python.yml')){
+        steps.node(steps.POD_LABEL){
+          def env = ["APM_SERVER_BRANCH=${y}",
+            "${steps.agentMapping.envVar(tag)}=${x}",
+            "REUSE_CONTAINERS=true",
+            "ENABLE_ES_DUMP=true",
+            "PATH=${steps.env.WORKSPACE}/${steps.env.BASE_DIR}/.ci/scripts:${steps.env.PATH}",
+            "TMPDIR=${steps.env.WORKSPACE}"
+            ]
+          def label = "${tag}-${x}-${y}"
+          try{
+            saveResult(x, y, 0)
+            steps.runScript(label: label, agentType: tag, env: env)
+            saveResult(x, y, 1)
+          } finally {
+            steps.wrappingup(label)
+          }
         }
       }
     }
