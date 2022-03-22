@@ -14,7 +14,27 @@ pipeline {
   agent {
     kubernetes {
       defaultContainer 'kibana-yarn'
-      yaml libraryResource(resource: 'pods/python.yml')
+      yaml '''
+apiVersion: v1
+kind: Pod
+spec:
+  securityContext:
+    runAsUser: 1000 # default UID of jenkins user in agent image
+  containers:
+  - name: python
+    image: python:3.9
+    command:
+      - sleep
+    args:
+      - infinity
+  resources:
+    limits:
+      cpu: 2
+      memory: 4Gi
+    requests:
+      cpu: 1
+      memory: 4Gi
+'''
     }
   }
   environment {
@@ -194,7 +214,51 @@ class IntegrationTestingParallelTaskGenerator extends DefaultParallelTaskGenerat
   */
   public Closure generateStep(x, y){
     return {
-      steps.podTemplate(yaml: steps.libraryResource(resource: 'pods/dind-python.yml')){
+      steps.podTemplate(yaml: '''
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+    - name: dind
+      image: docker:20.10.12-dind
+      securityContext:
+        privileged: true
+      env:
+        - name: DOCKER_TLS_CERTDIR
+          value: ""
+      command:
+        - dockerd
+      args:
+        - -H tcp://localhost:2375
+        - -H unix:///var/run/docker.sock
+      ports:
+        - containerPort: 2375
+          hostIP: 127.0.0.1
+      volumeMounts:
+        - name: docker-cache
+          mountPath: /var/lib/docker
+    - name: python
+      image: python:3.9
+      securityContext:
+        runAsUser: 1000 # default UID of jenkins user in agent image
+      command:
+        - sleep
+      args:
+        - infinity
+      env:
+        - name: DOCKER_HOST
+          value: tcp://localhost:2375
+  volumes:
+    - name: docker-cache
+      emptyDir: {}
+  resources:
+    limits:
+      cpu: 2
+      memory: 8Gi
+    requests:
+      cpu: 1
+      memory: 4Gi
+''')){
         steps.node(steps.POD_LABEL){
           def env = ["APM_SERVER_BRANCH=${y}",
             "${steps.agentMapping.envVar(tag)}=${x}",
