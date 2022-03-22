@@ -258,7 +258,7 @@ spec:
     requests:
       cpu: 1
       memory: 4Gi
-''')){
+'''){
         steps.node(steps.POD_LABEL){
           def env = ["APM_SERVER_BRANCH=${y}",
             "${steps.agentMapping.envVar(tag)}=${x}",
