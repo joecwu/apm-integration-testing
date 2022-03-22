@@ -297,7 +297,7 @@ def runScript(Map params = [:]){
     log(level: 'INFO', text: "${label}")
     deleteDir()
     container('dind') {
-      sh(label: 'Docker version', scrip: 'docker version')
+      sh(label: 'Docker version', script: 'docker version')
       sh(label: 'Copy Docker binary', script: "mkdir -p ${WORKSPACE}/bin && cp \$(command -v docker) ${WORKSPACE}/bin")
     }
     unstash "source"
