@@ -266,7 +266,7 @@ spec:
             "${steps.agentMapping.envVar(tag)}=${x}",
             "REUSE_CONTAINERS=true",
             "ENABLE_ES_DUMP=true",
-            "PATH=${steps.env.WORKSPACE}/${steps.env.BASE_DIR}/.ci/scripts:${steps.env.PATH}",
+            "PATH=${steps.env.WORKSPACE}/bin:${steps.env.WORKSPACE}/${steps.env.BASE_DIR}/.ci/scripts:${steps.env.PATH}",
             "TMPDIR=${steps.env.WORKSPACE}"
             ]
           def label = "${tag}-${x}-${y}"
@@ -295,6 +295,10 @@ def runScript(Map params = [:]){
   def dockerLogs = label.replace(":","_").replace(";","_").replace(" ","").replace("--","-")
   withGithubNotify(context: "${label}", isBlueOcean: true) {
     log(level: 'INFO', text: "${label}")
+    container('dind') {
+      sh 'docker version'
+      sh(script: "mkdir -p ${WORKSPACE}/bin && cp \$(command -v docker) ${WORKSPACE}/bin")
+    }
     deleteDir()
     unstash "source"
     filebeat(output: "docker-${dockerLogs}.log", archiveOnlyOnFail: true){
