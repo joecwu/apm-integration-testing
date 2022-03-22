@@ -13,7 +13,7 @@ import groovy.transform.Field
 pipeline {
   agent {
     kubernetes {
-      defaultContainer 'kibana-yarn'
+      defaultContainer 'python'
       yaml '''
 apiVersion: v1
 kind: Pod
@@ -214,7 +214,9 @@ class IntegrationTestingParallelTaskGenerator extends DefaultParallelTaskGenerat
   */
   public Closure generateStep(x, y){
     return {
-      steps.podTemplate(yaml: '''
+      steps.podTemplate(
+        defaultContainer: 'python',
+        yaml: '''
 apiVersion: v1
 kind: Pod
 spec:
