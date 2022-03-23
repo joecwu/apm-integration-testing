@@ -109,24 +109,75 @@ spec:
         }
       }
       steps {
-        // deleteDir()
-        // unstash "source"
-        // dir("${BASE_DIR}"){
+        podTemplate(
+          defaultContainer: 'python',
+          yaml: '''
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+    - name: dind
+      image: docker:20.10.12-dind
+      securityContext:
+        privileged: true
+      env:
+        - name: DOCKER_TLS_CERTDIR
+          value: ""
+      command:
+        - dockerd
+      args:
+        - -H tcp://localhost:2375
+        - -H unix:///var/run/docker.sock
+      ports:
+        - containerPort: 2375
+          hostIP: 127.0.0.1
+      volumeMounts:
+        - name: docker-cache
+          mountPath: /var/lib/docker
+    - name: python
+      securityContext:
+        runAsUser: 1000 # default UID of jenkins user in agent image
+      image: python:3.9
+      command:
+        - sleep
+      args:
+        - infinity
+      env:
+        - name: DOCKER_HOST
+          value: tcp://localhost:2375
+  volumes:
+    - name: docker-cache
+      emptyDir: {}
+  resources:
+    limits:
+      cpu: 2
+      memory: 8Gi
+    requests:
+      cpu: 1
+      memory: 4Gi
+'''){
           script {
-            integrationTestsGen = new IntegrationTestingParallelTaskGenerator(
-              xKey: agentMapping.agentVar(env.NAME),
-              yKey: agentMapping.agentVar('server'),
-              xFile: agentMapping.yamlVersionFile(env.NAME),
-              yFile: agentMapping.yamlVersionFile('server'),
-              exclusionFile: agentMapping.yamlVersionFile(env.NAME),
-              tag: env.NAME,
-              name: params.INTEGRATION_TEST,
-              steps: this
-              )
-            def mapPatallelTasks = integrationTestsGen.generateParallelTests()
+            def mapPatallelTasks = [:]
+            node(POD_LABEL){
+              deleteDir()
+              unstash "source"
+              dir("${BASE_DIR}"){
+                integrationTestsGen = new IntegrationTestingParallelTaskGenerator(
+                  xKey: agentMapping.agentVar(env.NAME),
+                  yKey: agentMapping.agentVar('server'),
+                  xFile: agentMapping.yamlVersionFile(env.NAME),
+                  yFile: agentMapping.yamlVersionFile('server'),
+                  exclusionFile: agentMapping.yamlVersionFile(env.NAME),
+                  tag: env.NAME,
+                  name: params.INTEGRATION_TEST,
+                  steps: this
+                  )
+                mapPatallelTasks = integrationTestsGen.generateParallelTests()
+              }
+            }
             parallel(mapPatallelTasks)
           }
-        // }
+        }
       }
     }
     stage("All") {
@@ -290,69 +341,21 @@ class IntegrationTestingParallelTaskGenerator extends DefaultParallelTaskGenerat
   */
   public Closure generateStep(x, y){
     return {
-      steps.podTemplate(
-        defaultContainer: 'python',
-        yaml: '''
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-    - name: dind
-      image: docker:20.10.12-dind
-      securityContext:
-        privileged: true
-      env:
-        - name: DOCKER_TLS_CERTDIR
-          value: ""
-      command:
-        - dockerd
-      args:
-        - -H tcp://localhost:2375
-        - -H unix:///var/run/docker.sock
-      ports:
-        - containerPort: 2375
-          hostIP: 127.0.0.1
-      volumeMounts:
-        - name: docker-cache
-          mountPath: /var/lib/docker
-    - name: python
-      securityContext:
-        runAsUser: 1000 # default UID of jenkins user in agent image
-      image: python:3.9
-      command:
-        - sleep
-      args:
-        - infinity
-      env:
-        - name: DOCKER_HOST
-          value: tcp://localhost:2375
-  volumes:
-    - name: docker-cache
-      emptyDir: {}
-  resources:
-    limits:
-      cpu: 2
-      memory: 8Gi
-    requests:
-      cpu: 1
-      memory: 4Gi
-'''){
-        steps.node(steps.POD_LABEL){
-          def env = ["APM_SERVER_BRANCH=${y}",
-            "${steps.agentMapping.envVar(tag)}=${x}",
-            "REUSE_CONTAINERS=true",
-            "ENABLE_ES_DUMP=true",
-            "PATH=${steps.env.WORKSPACE}/bin:${steps.env.WORKSPACE}/${steps.env.BASE_DIR}/.ci/scripts:${steps.env.PATH}",
-            "TMPDIR=${steps.env.WORKSPACE}"
-            ]
-          def label = "${tag}-${x}-${y}"
-          try{
-            saveResult(x, y, 0)
-            steps.runScript(label: label, agentType: tag, env: env)
-            saveResult(x, y, 1)
-          } finally {
-            steps.wrappingup(label)
-          }
+      steps.node(steps.POD_LABEL){
+        def env = ["APM_SERVER_BRANCH=${y}",
+          "${steps.agentMapping.envVar(tag)}=${x}",
+          "REUSE_CONTAINERS=true",
+          "ENABLE_ES_DUMP=true",
+          "PATH=${steps.env.WORKSPACE}/bin:${steps.env.WORKSPACE}/${steps.env.BASE_DIR}/.ci/scripts:${steps.env.PATH}",
+          "TMPDIR=${steps.env.WORKSPACE}"
+          ]
+        def label = "${tag}-${x}-${y}"
+        try{
+          saveResult(x, y, 0)
+          steps.runScript(label: label, agentType: tag, env: env)
+          saveResult(x, y, 1)
+        } finally {
+          steps.wrappingup(label)
         }
       }
     }
