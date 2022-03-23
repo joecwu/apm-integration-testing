@@ -51,27 +51,7 @@ pipeline {
         agent {
           kubernetes {
             defaultContainer 'python'
-            yaml '''
-apiVersion: v1
-kind: Pod
-spec:
-  securityContext:
-    runAsUser: 1000 # default UID of jenkins user in agent image
-  containers:
-  - name: python
-    image: python:3.9
-    command:
-      - sleep
-    args:
-      - infinity
-  resources:
-    limits:
-      cpu: 2
-      memory: 4Gi
-    requests:
-      cpu: 1
-      memory: 4Gi
-'''
+            yaml pythonYAML()
         }
       }
       options { skipDefaultCheckout() }
@@ -110,53 +90,7 @@ spec:
       }
       steps {
         script {
-          podTemplate(
-            defaultContainer: 'python',
-            yaml: '''
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-    - name: dind
-      image: docker:20.10.12-dind
-      securityContext:
-        privileged: true
-      env:
-        - name: DOCKER_TLS_CERTDIR
-          value: ""
-      command:
-        - dockerd
-      args:
-        - -H tcp://localhost:2375
-        - -H unix:///var/run/docker.sock
-      ports:
-        - containerPort: 2375
-          hostIP: 127.0.0.1
-      volumeMounts:
-        - name: docker-cache
-          mountPath: /var/lib/docker
-    - name: python
-      securityContext:
-        runAsUser: 1000 # default UID of jenkins user in agent image
-      image: python:3.9
-      command:
-        - sleep
-      args:
-        - infinity
-      env:
-        - name: DOCKER_HOST
-          value: tcp://localhost:2375
-  volumes:
-    - name: docker-cache
-      emptyDir: {}
-  resources:
-    limits:
-      cpu: 2
-      memory: 8Gi
-    requests:
-      cpu: 1
-      memory: 4Gi
-'''){
+          pythonDinDPod(){
             def mapPatallelTasks = [:]
             node(POD_LABEL){
               deleteDir()
@@ -184,51 +118,7 @@ spec:
         agent {
           kubernetes {
             defaultContainer 'python'
-            yaml '''
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-    - name: dind
-      image: docker:20.10.12-dind
-      securityContext:
-        privileged: true
-      env:
-        - name: DOCKER_TLS_CERTDIR
-          value: ""
-      command:
-        - dockerd
-      args:
-        - -H tcp://localhost:2375
-        - -H unix:///var/run/docker.sock
-      ports:
-        - containerPort: 2375
-          hostIP: 127.0.0.1
-      volumeMounts:
-        - name: docker-cache
-          mountPath: /var/lib/docker
-    - name: python
-      securityContext:
-        runAsUser: 1000 # default UID of jenkins user in agent image
-      image: python:3.9
-      command:
-        - sleep
-      args:
-        - infinity
-      env:
-        - name: DOCKER_HOST
-          value: tcp://localhost:2375
-  volumes:
-    - name: docker-cache
-      emptyDir: {}
-  resources:
-    limits:
-      cpu: 2
-      memory: 8Gi
-    requests:
-      cpu: 1
-      memory: 4Gi
-'''
+            yaml pythonDinDYAML()
         }
       }
       when {
@@ -266,27 +156,7 @@ spec:
         agent {
           kubernetes {
             defaultContainer 'python'
-            yaml '''
-apiVersion: v1
-kind: Pod
-spec:
-  securityContext:
-    runAsUser: 1000 # default UID of jenkins user in agent image
-  containers:
-  - name: python
-    image: python:3.9
-    command:
-      - sleep
-    args:
-      - infinity
-  resources:
-    limits:
-      cpu: 2
-      memory: 4Gi
-    requests:
-      cpu: 1
-      memory: 4Gi
-'''
+            yaml pythonYAML()
         }
       }
       when {
@@ -381,17 +251,6 @@ def runScript(Map params = [:]){
     }
     echo pwd
     deleteDir()
-    container('dind') {
-      sh(label: 'Docker version', script: 'docker version')
-      sh(label: 'Copy Docker binary', script: """
-        pwd
-        id
-        ls -la
-        ls -la ${WORKSPACE}
-        ls -la ${WORKSPACE}/..
-        mkdir -p ${WORKSPACE}/bin && cp \$(command -v docker) ${WORKSPACE}/bin
-      """)
-    }
     unstash "source"
     //filebeat(output: "docker-${dockerLogs}.log", archiveOnlyOnFail: true){
       sh(label: 'Docker containers summary', script: '''
@@ -435,4 +294,104 @@ def wrappingup(label){
 
 def normalise(label) {
   return label?.replace(';','/').replace('--','_').replace('.','_').replace(' ','_')
+}
+
+def pythonYAML(){
+  return '''
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+    - name: python
+      securityContext:
+        runAsUser: 1000 # default UID of jenkins user in agent image
+      image: python:3.9
+      command:
+        - sleep
+      args:
+        - infinity
+  resources:
+    limits:
+      cpu: 2
+      memory: 4Gi
+    requests:
+      cpu: 1
+      memory: 4Gi
+'''
+}
+
+def pythonDinDYAML(){
+  return '''
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+    - name: dind
+      image: docker:20.10.12-dind
+      securityContext:
+        privileged: true
+      env:
+        - name: DOCKER_TLS_CERTDIR
+          value: ""
+      command:
+        - dockerd
+      args:
+        - -H tcp://localhost:2375
+        - -H unix:///var/run/docker.sock
+      ports:
+        - containerPort: 2375
+          hostIP: 127.0.0.1
+      volumeMounts:
+        - name: docker-cache
+          mountPath: /var/lib/docker
+    - name: python
+      securityContext:
+        runAsUser: 1000 # default UID of jenkins user in agent image
+      image: python:3.9
+      command:
+        - sleep
+      args:
+        - infinity
+      env:
+        - name: DOCKER_HOST
+          value: tcp://localhost:2375
+  volumes:
+    - name: docker-cache
+      emptyDir: {}
+  resources:
+    limits:
+      cpu: 2
+      memory: 8Gi
+    requests:
+      cpu: 1
+      memory: 4Gi
+'''
+}
+
+def pythonPod(){
+  podTemplate(yaml:pythonYAML()){
+    container('python'){
+      body.call()
+    }
+  }
+}
+
+def pythonDinDPod(body){
+  podTemplate(yaml: pythonDinDYAML()){
+    container('dind') {
+      sh(label: 'Docker version', script: 'docker version')
+      sh(label: 'Copy Docker binary', script: """
+        set -e
+        mkdir -p ${WORKSPACE}/bin
+        cp \$(command -v docker) ${WORKSPACE}/bin
+      """)
+    }
+    container('python'){
+      withEnv([
+        "PATH=${env.WORKSPACE}/bin:${env.PATH}"
+      ]){
+        body.call()
+      }
+    }
+  }
 }
