@@ -296,7 +296,7 @@ def runScript(Map params = [:]){
   withGithubNotify(context: "${label}", isBlueOcean: true) {
     log(level: 'INFO', text: "${label}")
     echo pwd
-    ws(){
+    ws('test'){
       sh(label: 'NOOP', script: 'pwd && id')
     }
     deleteDir()
