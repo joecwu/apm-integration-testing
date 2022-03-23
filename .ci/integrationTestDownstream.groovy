@@ -11,32 +11,7 @@ import groovy.transform.Field
 @Field def integrationTestsGen
 
 pipeline {
-  agent {
-    kubernetes {
-      defaultContainer 'python'
-      yaml '''
-apiVersion: v1
-kind: Pod
-spec:
-  securityContext:
-    runAsUser: 1000 # default UID of jenkins user in agent image
-  containers:
-  - name: python
-    image: python:3.9
-    command:
-      - sleep
-    args:
-      - infinity
-  resources:
-    limits:
-      cpu: 2
-      memory: 4Gi
-    requests:
-      cpu: 1
-      memory: 4Gi
-'''
-    }
-  }
+  agent none
   environment {
     BASE_DIR="src/github.com/elastic/apm-integration-testing"
     REPO="git@github.com:elastic/apm-integration-testing.git"
@@ -72,6 +47,32 @@ spec:
      Checkout the code and stash it, to use it on other stages.
     */
     stage('Checkout'){
+        agent {
+          kubernetes {
+            defaultContainer 'python'
+            yaml '''
+apiVersion: v1
+kind: Pod
+spec:
+  securityContext:
+    runAsUser: 1000 # default UID of jenkins user in agent image
+  containers:
+  - name: python
+    image: python:3.9
+    command:
+      - sleep
+    args:
+      - infinity
+  resources:
+    limits:
+      cpu: 2
+      memory: 4Gi
+    requests:
+      cpu: 1
+      memory: 4Gi
+'''
+        }
+      }
       options { skipDefaultCheckout() }
       steps {
         echo "Correct PR"
@@ -130,6 +131,56 @@ spec:
       }
     }
     stage("All") {
+        agent {
+          kubernetes {
+            defaultContainer 'python'
+            yaml '''
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+    - name: dind
+      image: docker:20.10.12-dind
+      securityContext:
+        privileged: true
+      env:
+        - name: DOCKER_TLS_CERTDIR
+          value: ""
+      command:
+        - dockerd
+      args:
+        - -H tcp://localhost:2375
+        - -H unix:///var/run/docker.sock
+      ports:
+        - containerPort: 2375
+          hostIP: 127.0.0.1
+      volumeMounts:
+        - name: docker-cache
+          mountPath: /var/lib/docker
+    - name: python
+      securityContext:
+        runAsUser: 1000 # default UID of jenkins user in agent image
+      image: python:3.9
+      command:
+        - sleep
+      args:
+        - infinity
+      env:
+        - name: DOCKER_HOST
+          value: tcp://localhost:2375
+  volumes:
+    - name: docker-cache
+      emptyDir: {}
+  resources:
+    limits:
+      cpu: 2
+      memory: 8Gi
+    requests:
+      cpu: 1
+      memory: 4Gi
+'''
+        }
+      }
       when {
         expression { return params.INTEGRATION_TEST == 'All' }
       }
@@ -161,6 +212,32 @@ spec:
       }
     }
     stage("UI") {
+        agent {
+          kubernetes {
+            defaultContainer 'python'
+            yaml '''
+apiVersion: v1
+kind: Pod
+spec:
+  securityContext:
+    runAsUser: 1000 # default UID of jenkins user in agent image
+  containers:
+  - name: python
+    image: python:3.9
+    command:
+      - sleep
+    args:
+      - infinity
+  resources:
+    limits:
+      cpu: 2
+      memory: 4Gi
+    requests:
+      cpu: 1
+      memory: 4Gi
+'''
+        }
+      }
       when {
         expression { return params.INTEGRATION_TEST == 'UI' }
       }
@@ -243,9 +320,6 @@ spec:
       securityContext:
         runAsUser: 1000 # default UID of jenkins user in agent image
       image: python:3.9
-      env:
-        - name: HOME
-          value: "/tmp"
       command:
         - sleep
       args:
