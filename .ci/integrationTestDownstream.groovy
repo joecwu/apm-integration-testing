@@ -257,7 +257,8 @@ spec:
       }
       post {
         always {
-          wrappingup('all')
+          //TODO needs a node
+          //wrappingup('all')
         }
       }
     }
@@ -310,20 +311,21 @@ spec:
       }
     }
   }
-  post {
-    cleanup {
-      script{
-        if(integrationTestsGen?.results){
-          writeJSON(file: 'results.json', json: toJSON(integrationTestsGen.results), pretty: 2)
-          def mapResults = ["${params.INTEGRATION_TEST}": integrationTestsGen.results]
-          def processor = new ResultsProcessor()
-          processor.processResults(mapResults)
-          archiveArtifacts allowEmptyArchive: true, artifacts: 'results.json,results.html', defaultExcludes: false
-        }
-        notifyBuildResult(prComment: false)
-      }
-    }
-  }
+  // post {
+  //   //TODO needs a node
+  //   cleanup {
+  //     script{
+  //       if(integrationTestsGen?.results){
+  //         writeJSON(file: 'results.json', json: toJSON(integrationTestsGen.results), pretty: 2)
+  //         def mapResults = ["${params.INTEGRATION_TEST}": integrationTestsGen.results]
+  //         def processor = new ResultsProcessor()
+  //         processor.processResults(mapResults)
+  //         archiveArtifacts allowEmptyArchive: true, artifacts: 'results.json,results.html', defaultExcludes: false
+  //       }
+  //       notifyBuildResult(prComment: false)
+  //     }
+  //   }
+  // }
 }
 
 /**
