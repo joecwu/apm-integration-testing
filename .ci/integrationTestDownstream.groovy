@@ -241,8 +241,6 @@ spec:
           mountPath: /var/lib/docker
     - name: python
       image: python:3.9
-      securityContext:
-        runAsUser: 1000 # default UID of jenkins user in agent image
       command:
         - sleep
       args:
@@ -297,12 +295,19 @@ def runScript(Map params = [:]){
     log(level: 'INFO', text: "${label}")
     deleteDir()
     container('dind') {
-      sh(label: 'Docker version', script: 'docker version')
+      sh(label: 'Docker version', scrip: 'docker version')
       sh(label: 'Copy Docker binary', script: "mkdir -p ${WORKSPACE}/bin && cp \$(command -v docker) ${WORKSPACE}/bin")
     }
     unstash "source"
     //filebeat(output: "docker-${dockerLogs}.log", archiveOnlyOnFail: true){
-      sh(label: 'Docker containers summary', script: 'docker ps -a && docker images -a && docker volume ls && docker network ls')
+      sh(label: 'Docker containers summary', script: '''
+        pwd
+        id
+        ls -la
+        ls -la ${WORKSPACE}
+        ls -la ${WORKSPACE}/..
+        docker ps -a && docker images -a && docker volume ls && docker network ls
+      ''')
       dir("${BASE_DIR}"){
         withEnv(env){
           withOtelEnv() {
