@@ -90,8 +90,8 @@ pipeline {
       }
       steps {
         script {
+          def mapPatallelTasks = [:]
           pythonDinDPod(){
-            def mapPatallelTasks = [:]
             node(POD_LABEL){
               deleteDir()
               unstash "source"
@@ -109,8 +109,8 @@ pipeline {
                 mapPatallelTasks = integrationTestsGen.generateParallelTests()
               }
             }
-            parallel(mapPatallelTasks)
           }
+          parallel(mapPatallelTasks)
         }
       }
     }
@@ -213,7 +213,7 @@ class IntegrationTestingParallelTaskGenerator extends DefaultParallelTaskGenerat
   */
   public Closure generateStep(x, y){
     return {
-      steps.node(steps.POD_LABEL){
+      steps.pythonDinDPod(){
         def env = ["APM_SERVER_BRANCH=${y}",
           "${steps.agentMapping.envVar(tag)}=${x}",
           "REUSE_CONTAINERS=true",
@@ -370,8 +370,10 @@ spec:
 
 def pythonPod(){
   podTemplate(yaml:pythonYAML()){
-    container('python'){
-      body.call()
+    node(POD_LABEL){
+      container('python'){
+        body.call()
+      }
     }
   }
 }
@@ -386,11 +388,13 @@ def pythonDinDPod(body){
         cp \$(command -v docker) ${WORKSPACE}/bin
       """)
     }
-    container('python'){
-      withEnv([
-        "PATH=${env.WORKSPACE}/bin:${env.PATH}"
-      ]){
-        body.call()
+    node(POD_LABEL){
+      container('python'){
+        withEnv([
+          "PATH=${env.WORKSPACE}/bin:${env.PATH}"
+        ]){
+          body.call()
+        }
       }
     }
   }
