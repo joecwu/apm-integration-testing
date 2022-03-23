@@ -380,15 +380,15 @@ def pythonPod(){
 
 def pythonDinDPod(body){
   podTemplate(yaml: pythonDinDYAML()){
-    container('dind') {
-      sh(label: 'Docker version', script: 'docker version')
-      sh(label: 'Copy Docker binary', script: """
-        set -e
-        mkdir -p ${WORKSPACE}/bin
-        cp \$(command -v docker) ${WORKSPACE}/bin
-      """)
-    }
     node(POD_LABEL){
+      container('dind') {
+        sh(label: 'Docker version', script: 'docker version')
+        sh(label: 'Copy Docker binary', script: """
+          set -e
+          mkdir -p ${WORKSPACE}/bin
+          cp \$(command -v docker) ${WORKSPACE}/bin
+        """)
+      }
       container('python'){
         withEnv([
           "PATH=${env.WORKSPACE}/bin:${env.PATH}"
