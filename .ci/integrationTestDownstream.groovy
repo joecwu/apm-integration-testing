@@ -295,6 +295,7 @@ def runScript(Map params = [:]){
   def dockerLogs = label.replace(":","_").replace(";","_").replace(" ","").replace("--","-")
   withGithubNotify(context: "${label}", isBlueOcean: true) {
     log(level: 'INFO', text: "${label}")
+    ws()
     deleteDir()
     container('dind') {
       sh(label: 'Docker version', script: 'docker version')
