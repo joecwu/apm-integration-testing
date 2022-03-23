@@ -220,6 +220,8 @@ class IntegrationTestingParallelTaskGenerator extends DefaultParallelTaskGenerat
 apiVersion: v1
 kind: Pod
 spec:
+  securityContext:
+    runAsUser: 1000 # default UID of jenkins user in agent image
   containers:
     - name: dind
       image: docker:20.10.12-dind
