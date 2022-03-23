@@ -386,7 +386,7 @@ def pythonDinDPod(body){
         withEnv([
           "PATH=${env.WORKSPACE}/bin:${env.PATH}"
         ]){
-          sh(label: 'Install virtualenv', script: 'pip install -vvv --user virtualenv')
+          sh(label: 'Install virtualenv', script: 'pip install -v --user virtualenv')
           body.call()
         }
       }
