@@ -56,7 +56,6 @@ pipeline {
       }
       options { skipDefaultCheckout() }
       steps {
-        deleteDir()
         gitCheckout(basedir: "${BASE_DIR}",
           branch: "${params.INTEGRATION_TESTING_VERSION}",
           repo: "${REPO}",
@@ -93,7 +92,6 @@ pipeline {
           def mapPatallelTasks = [:]
           pythonDinDPod(){
             node(POD_LABEL){
-              deleteDir()
               unstash "source"
               dir("${BASE_DIR}"){
                 integrationTestsGen = new IntegrationTestingParallelTaskGenerator(
@@ -131,7 +129,6 @@ pipeline {
       }
       steps {
         withGithubNotify(context: 'All', isBlueOcean: true) {
-          deleteDir()
           unstash "source"
           filebeat(output: "docker-all.log", archiveOnlyOnFail: true){
             dir("${BASE_DIR}"){
@@ -168,7 +165,6 @@ pipeline {
       }
       steps {
         withGithubNotify(context: 'UI', isBlueOcean: true) {
-          deleteDir()
           unstash "source"
           dir("${BASE_DIR}"){
             script {
@@ -248,7 +244,6 @@ def runScript(Map params = [:]){
     log(level: 'INFO', text: "${label}")
     sh(label: 'NOOP', script: 'pwd && id')
     echo pwd
-    deleteDir()
     unstash "source"
     //filebeat(output: "docker-${dockerLogs}.log", archiveOnlyOnFail: true){
       sh(label: 'Docker containers summary', script: '''
