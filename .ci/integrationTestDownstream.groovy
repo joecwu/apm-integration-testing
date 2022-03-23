@@ -11,6 +11,7 @@ import groovy.transform.Field
 @Field def integrationTestsGen
 
 pipeline {
+  // We cannot launch a k8s agent from another agent https://issues.jenkins.io/browse/JENKINS-51700
   agent none
   environment {
     BASE_DIR="src/github.com/elastic/apm-integration-testing"
@@ -75,8 +76,6 @@ spec:
       }
       options { skipDefaultCheckout() }
       steps {
-        echo "Correct PR"
-        sh('git show-ref')
         deleteDir()
         gitCheckout(basedir: "${BASE_DIR}",
           branch: "${params.INTEGRATION_TESTING_VERSION}",
