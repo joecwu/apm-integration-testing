@@ -109,9 +109,10 @@ spec:
         }
       }
       steps {
-        podTemplate(
-          defaultContainer: 'python',
-          yaml: '''
+        script {
+          podTemplate(
+            defaultContainer: 'python',
+            yaml: '''
 apiVersion: v1
 kind: Pod
 spec:
@@ -156,7 +157,6 @@ spec:
       cpu: 1
       memory: 4Gi
 '''){
-          script {
             def mapPatallelTasks = [:]
             node(POD_LABEL){
               deleteDir()
