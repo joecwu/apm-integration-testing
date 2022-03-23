@@ -109,9 +109,9 @@ spec:
         }
       }
       steps {
-        deleteDir()
-        unstash "source"
-        dir("${BASE_DIR}"){
+        // deleteDir()
+        // unstash "source"
+        // dir("${BASE_DIR}"){
           script {
             integrationTestsGen = new IntegrationTestingParallelTaskGenerator(
               xKey: agentMapping.agentVar(env.NAME),
@@ -126,7 +126,7 @@ spec:
             def mapPatallelTasks = integrationTestsGen.generateParallelTests()
             parallel(mapPatallelTasks)
           }
-        }
+        // }
       }
     }
     stage("All") {
