@@ -243,6 +243,9 @@ spec:
       securityContext:
         runAsUser: 1000 # default UID of jenkins user in agent image
       image: python:3.9
+      env:
+        - name: HOME
+          value: "/tmp"
       command:
         - sleep
       args:
@@ -295,10 +298,10 @@ def runScript(Map params = [:]){
   def dockerLogs = label.replace(":","_").replace(";","_").replace(" ","").replace("--","-")
   withGithubNotify(context: "${label}", isBlueOcean: true) {
     log(level: 'INFO', text: "${label}")
-    echo pwd
-    ws('test'){
+    ws("${${WORKSPACE}}"){
       sh(label: 'NOOP', script: 'pwd && id')
     }
+    echo pwd
     deleteDir()
     container('dind') {
       sh(label: 'Docker version', script: 'docker version')
