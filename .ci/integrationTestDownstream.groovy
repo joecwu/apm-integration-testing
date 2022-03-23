@@ -295,7 +295,10 @@ def runScript(Map params = [:]){
   def dockerLogs = label.replace(":","_").replace(";","_").replace(" ","").replace("--","-")
   withGithubNotify(context: "${label}", isBlueOcean: true) {
     log(level: 'INFO', text: "${label}")
-    sh(label: 'NOOP', script: 'pwd && id')
+    echo pwd
+    ws(){
+      sh(label: 'NOOP', script: 'pwd && id')
+    }
     deleteDir()
     container('dind') {
       sh(label: 'Docker version', script: 'docker version')
