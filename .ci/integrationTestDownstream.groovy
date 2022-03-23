@@ -298,7 +298,14 @@ def runScript(Map params = [:]){
     deleteDir()
     container('dind') {
       sh(label: 'Docker version', script: 'docker version')
-      sh(label: 'Copy Docker binary', script: "mkdir -p ${WORKSPACE}/bin && cp \$(command -v docker) ${WORKSPACE}/bin")
+      sh(label: 'Copy Docker binary', script: """
+        pwd
+        id
+        ls -la
+        ls -la ${WORKSPACE}
+        ls -la ${WORKSPACE}/..
+        mkdir -p ${WORKSPACE}/bin && cp \$(command -v docker) ${WORKSPACE}/bin
+      """)
     }
     unstash "source"
     //filebeat(output: "docker-${dockerLogs}.log", archiveOnlyOnFail: true){
