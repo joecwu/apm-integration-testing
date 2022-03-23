@@ -145,12 +145,12 @@ pipeline {
           }
         }
       }
-      post {
-        always {
-          //TODO needs a node
-          //wrappingup('all')
-        }
-      }
+      // post {
+      //   always {
+      //     //TODO needs a node
+      //     //wrappingup('all')
+      //   }
+      // }
     }
     stage("UI") {
         agent {
