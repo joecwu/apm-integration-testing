@@ -222,13 +222,13 @@ class IntegrationTestingParallelTaskGenerator extends DefaultParallelTaskGenerat
           "TMPDIR=${steps.env.WORKSPACE}"
           ]
         def label = "${tag}-${x}-${y}"
-        try{
+        //try{
           saveResult(x, y, 0)
           steps.runScript(label: label, agentType: tag, env: env)
           saveResult(x, y, 1)
-        } finally {
+        //} finally {
           steps.wrappingup(label)
-        }
+        //}
       }
     }
   }
@@ -246,9 +246,7 @@ def runScript(Map params = [:]){
   def dockerLogs = label.replace(":","_").replace(";","_").replace(" ","").replace("--","-")
   withGithubNotify(context: "${label}", isBlueOcean: true) {
     log(level: 'INFO', text: "${label}")
-    ws("${${WORKSPACE}}"){
-      sh(label: 'NOOP', script: 'pwd && id')
-    }
+    sh(label: 'NOOP', script: 'pwd && id')
     echo pwd
     deleteDir()
     unstash "source"
