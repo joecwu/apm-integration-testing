@@ -82,6 +82,7 @@ pipeline {
     */
     stage("Integration Tests"){
       when {
+        beforeAgent true
         expression {
           return (params.INTEGRATION_TEST != 'All'
             && params.INTEGRATION_TEST != 'UI')
@@ -120,6 +121,7 @@ pipeline {
         }
       }
       when {
+        beforeAgent true
         expression { return params.INTEGRATION_TEST == 'All' }
       }
       environment {
@@ -142,21 +144,21 @@ pipeline {
           }
         }
       }
-      // post {
-      //   always {
-      //     //TODO needs a node
-      //     //wrappingup('all')
-      //   }
-      // }
+      post {
+        always {
+          wrappingup('all')
+        }
+      }
     }
     stage("UI") {
         agent {
           kubernetes {
             defaultContainer 'python'
-            yaml pythonYAML()
+            yaml nodeYAML()
         }
       }
       when {
+        beforeAgent true
         expression { return params.INTEGRATION_TEST == 'UI' }
       }
       environment {
@@ -167,31 +169,28 @@ pipeline {
         withGithubNotify(context: 'UI', isBlueOcean: true) {
           unstash "source"
           dir("${BASE_DIR}"){
-            script {
-              docker.image('node:11').inside() {
-                sh(label: "Check Schema", script: ".ci/scripts/ui.sh")
-              }
-            }
+            sh(label: "Check Schema", script: ".ci/scripts/ui.sh")
           }
         }
       }
     }
   }
-  // post {
-  //   //TODO needs a node
-  //   cleanup {
-  //     script{
-  //       if(integrationTestsGen?.results){
-  //         writeJSON(file: 'results.json', json: toJSON(integrationTestsGen.results), pretty: 2)
-  //         def mapResults = ["${params.INTEGRATION_TEST}": integrationTestsGen.results]
-  //         def processor = new ResultsProcessor()
-  //         processor.processResults(mapResults)
-  //         archiveArtifacts allowEmptyArchive: true, artifacts: 'results.json,results.html', defaultExcludes: false
-  //       }
-  //       notifyBuildResult(prComment: false)
-  //     }
-  //   }
-  // }
+  post {
+    cleanup {
+      script{
+        pythonPod(){
+          if(integrationTestsGen?.results){
+            writeJSON(file: 'results.json', json: toJSON(integrationTestsGen.results), pretty: 2)
+            def mapResults = ["${params.INTEGRATION_TEST}": integrationTestsGen.results]
+            def processor = new ResultsProcessor()
+            processor.processResults(mapResults)
+            archiveArtifacts allowEmptyArchive: true, artifacts: 'results.json,results.html', defaultExcludes: false
+          }
+          notifyBuildResult(prComment: false)
+        }
+      }
+    }
+  }
 }
 
 /**
@@ -247,12 +246,11 @@ def runScript(Map params = [:]){
     unstash "source"
     //filebeat(output: "docker-${dockerLogs}.log", archiveOnlyOnFail: true){
       sh(label: 'Docker containers summary', script: '''
-        pwd
-        id
-        ls -la
-        ls -la ${WORKSPACE}
-        ls -la ${WORKSPACE}/..
-        docker ps -a && docker images -a && docker volume ls && docker network ls
+        set -e
+        docker ps -a
+        docker images -a
+        docker volume ls
+        docker network ls
       ''')
       dir("${BASE_DIR}"){
         withEnv(env){
@@ -287,6 +285,30 @@ def wrappingup(label){
 
 def normalise(label) {
   return label?.replace(';','/').replace('--','_').replace('.','_').replace(' ','_')
+}
+
+def nodeYAML(){
+  return '''
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+    - name: node
+      securityContext:
+        runAsUser: 1000 # default UID of jenkins user in agent image
+      image: node:14
+      command:
+        - sleep
+      args:
+        - infinity
+  resources:
+    limits:
+      cpu: 2
+      memory: 4Gi
+    requests:
+      cpu: 1
+      memory: 4Gi
+'''
 }
 
 def pythonYAML(){
