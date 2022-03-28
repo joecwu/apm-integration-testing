@@ -385,7 +385,7 @@ spec:
 '''
 }
 
-def pythonPod(){
+def pythonPod(body){
   podTemplate(yaml:pythonYAML()){
     node(POD_LABEL){
       container('python'){
