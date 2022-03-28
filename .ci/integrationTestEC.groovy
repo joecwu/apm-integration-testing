@@ -97,11 +97,13 @@ def runAllTests(){
   ]
 
   tests.each{ item ->
-    try {
-      runTest(item)
-    }
-    finally {
-      grabResultsAndLogs("${getElasticStackVersion()}-${item}")
+    stage("${STACK_VERSION}-${item}"){
+      try {
+        runTest(item)
+      }
+      finally {
+        grabResultsAndLogs("${getElasticStackVersion()}-${item}")
+      }
     }
   }
 }
