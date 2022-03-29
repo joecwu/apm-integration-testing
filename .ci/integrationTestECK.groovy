@@ -218,12 +218,10 @@ def grabResultsAndLogs(label){
 }
 
 def destroyClusters(){
-  stage('Destroy Cluster'){
-    dir("${EC_DIR}/ansible"){
-      withTestEnv(){
-        catchError(buildResult: 'SUCCESS', stageResult: 'SUCCESS') {
-          sh(label: 'Destroy k8s cluster', script: 'make destroy-cluster')
-        }
+  dir("${EC_DIR}/ansible"){
+    withTestEnv(){
+      catchError(buildResult: 'SUCCESS', stageResult: 'SUCCESS') {
+        sh(label: 'Destroy k8s cluster', script: 'make destroy-cluster')
       }
     }
   }
