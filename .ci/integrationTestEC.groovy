@@ -47,6 +47,7 @@ pipeline {
             url: 'git@github.com:elastic/observability-test-environments.git'
           )
         }
+        sh(label: 'Select versions', script: "${EC_DIR}/.ci/scripts/stack-versions.sh")
         stash allowEmpty: true, name: 'source', useDefaultExcludes: false
       }
     }
@@ -55,7 +56,6 @@ pipeline {
         expression { return ! params.destroy_mode }
       }
       steps{
-        sh(label: 'Select versions', script: '.ci/scripts/stack-versions.sh')
         matrix(
           agent: 'ubuntu-20 && immutable',
           axes:[
