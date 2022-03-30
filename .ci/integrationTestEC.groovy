@@ -47,7 +47,7 @@ pipeline {
             url: 'git@github.com:elastic/observability-test-environments.git'
           )
         }
-        sh(label: 'Select versions', script: "${EC_DIR}/.ci/scripts/stack-versions.sh")
+        sh(label: 'Select versions', script: "./${EC_DIR}/.ci/scripts/stack-versions.sh")
         stash allowEmpty: true, name: 'source', useDefaultExcludes: false
       }
     }
