@@ -51,28 +51,30 @@ pipeline {
         stash allowEmpty: true, name: 'source', useDefaultExcludes: false
       }
     }
-    stage('Run ECK ITs'){
-      when {
-        expression { return ! params.destroy_mode }
-      }
-      steps{
-        matrix(
-          agent: 'ubuntu-20 && immutable',
-          axes:[
-            axis('STACK_VERSION', [stackVersions.release(), stackVersions.dev(snapshot: true), stackVersions.edge(snapshot: true)])
-          ]
-        ){
-          log(level: "INFO", text: "Running tests - ${getElasticStackVersion()}")
-          deleteDir()
-          unstash 'source'
-          provisionEnvironment()
-          sleep 300
-          runAllTests()
+    stages{
+      stage('Run ECK ITs'){
+        when {
+          expression { return ! params.destroy_mode }
         }
-      }
-      post {
-        cleanup {
-          destroyClusters()
+        steps{
+          matrix(
+            agent: 'ubuntu-20 && immutable',
+            axes:[
+              axis('STACK_VERSION', [stackVersions.release(), stackVersions.dev(snapshot: true), stackVersions.edge(snapshot: true)])
+            ]
+          ){
+            log(level: "INFO", text: "Running tests - ${getElasticStackVersion()}")
+            deleteDir()
+            unstash 'source'
+            provisionEnvironment()
+            sleep 300
+            runAllTests()
+          }
+        }
+        post {
+          cleanup {
+            destroyClusters()
+          }
         }
       }
     }
