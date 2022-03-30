@@ -95,18 +95,15 @@ def runAllTests(){
     'rum',
     'all'
   ]
-  def tasks = [:]
+
   tests.each{ item ->
-    tasks["${STACK_VERSION}-${item}"] = {
-      try {
-        runTest(item)
-      }
-      finally {
-        grabResultsAndLogs("${getElasticStackVersion()}-${item}")
-      }
+    try {
+      runTest(item)
+    }
+    finally {
+      grabResultsAndLogs("${getElasticStackVersion()}-${item}")
     }
   }
-  parallel tasks
 }
 
 def provisionEnvironment(){
