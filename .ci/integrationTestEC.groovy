@@ -50,32 +50,28 @@ pipeline {
         stash allowEmpty: true, name: 'source', useDefaultExcludes: false
       }
     }
-    stage('parallel'){
-      stages{
-        stage('Run ESS ITs'){
-          when {
-            expression { return ! params.destroy_mode }
-          }
-          steps{
-            matrix(
-              agent: 'ubuntu-20 && immutable',
-              axes:[
-                axis('STACK_VERSION', [stackVersions.release(), stackVersions.dev(snapshot: true), stackVersions.edge(snapshot: true)])
-              ]
-            ){
-              log(level: "INFO", text: "Running tests - ${getElasticStackVersion()}")
-              deleteDir()
-              unstash 'source'
-              provisionEnvironment()
-              sleep 300
-              runAllTests()
-            }
-          }
-          post {
-            cleanup {
-              destroyClusters()
-            }
-          }
+    stage('Run ESS ITs'){
+      when {
+        expression { return ! params.destroy_mode }
+      }
+      steps{
+        matrix(
+          agent: 'ubuntu-20 && immutable',
+          axes:[
+            axis('STACK_VERSION', [stackVersions.release(), stackVersions.dev(snapshot: true), stackVersions.edge(snapshot: true)])
+          ]
+        ){
+          log(level: "INFO", text: "Running tests - ${getElasticStackVersion()}")
+          deleteDir()
+          unstash 'source'
+          provisionEnvironment()
+          sleep 300
+          runAllTests()
+        }
+      }
+      post {
+        cleanup {
+          destroyClusters()
         }
       }
     }
@@ -99,9 +95,9 @@ def runAllTests(){
     'rum',
     'all'
   ]
-
+  def tasks = [:]
   tests.each{ item ->
-    stage("${STACK_VERSION}-${item}"){
+    tasks["${STACK_VERSION}-${item}"] = {
       try {
         runTest(item)
       }
@@ -110,6 +106,7 @@ def runAllTests(){
       }
     }
   }
+  parallel tasks
 }
 
 def provisionEnvironment(){
