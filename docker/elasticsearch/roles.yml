@@ -21,7 +21,7 @@ filebeat:
 heartbeat:
   cluster: ['manage_index_templates', 'monitor', 'manage_ingest_pipelines', 'manage_ilm']
   indices:
-    - names: ['heartbeat-*', 'shrink-heartbeat-*']
+    - names: ['heartbeat-*', 'shrink-heartbeat-*', 'synthetics-browser*']
       privileges: ['all']
 metricbeat:
   cluster: ['manage_index_templates', 'monitor', 'manage_ingest_pipelines', 'manage_ilm']
