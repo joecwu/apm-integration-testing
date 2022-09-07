@@ -20,8 +20,8 @@ async function run() {
     args: [
       '--disable-dev-shm-usage',
       // debug port is exported
-      //'--remote-debugging-address=0.0.0.0',
-      //'--remote-debugging-port=9222',
+      '--remote-debugging-address=0.0.0.0',
+      '--remote-debugging-port=9222',
       // chromium need to use --no-sandbox on linux/arm64
       // '--disable-gpu-sandbox',
       // '--disable-namespace-sandbox',
