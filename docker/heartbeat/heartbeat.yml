@@ -7,6 +7,8 @@ setup.kibana:
 
 processors:
   - add_observer_metadata:
+      geo:
+        name: DevOpsDays-Taipei-2022
 
 heartbeat.monitors:
 heartbeat.scheduler:
