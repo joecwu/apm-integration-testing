@@ -33,20 +33,21 @@ heartbeat.monitors:
     tags: ["web", "opbeans"]
     fields:
       env: production
-  - type: http
-    name: "opbeans web public access"
-    schedule: '@every 10s'
-    urls: [
-      "http://localhost:3000",
-      "http://localhost:3001",
-      "http://localhost:3002",
-      "http://localhost:3003",
-      "http://localhost:8000"
-      ]
-    check.response.status: 200
-    tags: ["web", "opbeans"]
-    fields:
-      env: production
+  # - type: http
+  #   name: "opbeans web public access"
+  #   schedule: '@every 10s'
+  #   urls: [
+  ## localhost 要換成 IP，否則 Container 內部存取 localhost 會是錯的。
+  #     "http://localhost:3000",
+  #     "http://localhost:3001",
+  #     "http://localhost:3002",
+  #     "http://localhost:3003",
+  #     "http://localhost:8000"
+  #     ]
+  #   check.response.status: 200
+  #   tags: ["web", "opbeans"]
+  #   fields:
+  #     env: production
   - type: tcp
     name: redis healthcheck
     schedule: '@every 5s'
