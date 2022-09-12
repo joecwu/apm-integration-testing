@@ -27,6 +27,231 @@ processors:
 ###################################################################################################
 filebeat.autodiscover:
   providers:
+    - type: docker
+      templates:
+        - condition:
+            contains:
+              docker.container.name: "opbeans-"
+          config:
+            - type: container
+              paths:
+                - "/var/lib/docker/containers/*/${data.docker.container.id}-json.log"
+              include_lines: ['^{']
+              tail_files: true
+              processors:
+              - add_tags:
+                  tags: [json]
+                  target: "parser_type"
+              - decode_json_fields:
+                  fields:
+                    - message
+                  target: ""
+                  overwrite_keys: true
+                  add_error_key: true
+              - drop_fields:
+                  fields:
+                    - service
+                    - event
+                    - url
+                    - error
+              - copy_fields:
+                  fields:
+                  - from: docker.container.labels.org_label-schema_name
+                    to: event.dataset
+                  fail_on_error: false
+                  ignore_missing: true
+              fields_under_root: true
+        - condition:
+            contains:
+              docker.container.name: "opbeans-"
+          config:
+            - type: container
+              paths:
+                - "/var/lib/docker/containers/*/${data.docker.container.id}-json.log"
+              tail_files: true
+              multiline.pattern: '^[[:blank:]]'
+              multiline.negate: false
+              multiline.match: after
+              exclude_lines: ['^{']
+              processors:
+              - add_tags:
+                  tags: [no_json]
+                  target: "parser_type"
+              - copy_fields:
+                  fields:
+                  - from: docker.container.labels.org_label-schema_name
+                    to: event.dataset
+                  fail_on_error: false
+                  ignore_missing: true
+        - condition:
+            contains:
+              docker.container.name: "kibana"
+          config:
+            - type: container
+              paths:
+                - "/var/lib/docker/containers/*/${data.docker.container.id}-json.log"
+              tail_files: true
+              json.add_error_key: true
+              json.overwrite_keys: true
+              json.keys_under_root: true
+              processors:
+              - copy_fields:
+                  fields:
+                  - from: docker.container.labels.org_label-schema_name
+                    to: event.dataset
+                  fail_on_error: false
+                  ignore_missing: true
+        - condition:
+            contains:
+              docker.container.name: "elasticsearch"
+          config:
+            - type: container
+              paths:
+                - "/var/lib/docker/containers/*/${data.docker.container.id}-json.log"
+              tail_files: true
+              json.add_error_key: true
+              json.overwrite_keys: true
+              json.keys_under_root: true
+              processors:
+              - copy_fields:
+                  fields:
+                  - from: docker.container.labels.org_label-schema_name
+                    to: event.dataset
+                  fail_on_error: false
+                  ignore_missing: true
+        - condition:
+            contains:
+              docker.container.name: "metricbeat"
+          config:
+            - type: container
+              paths:
+                - "/var/lib/docker/containers/*/${data.docker.container.id}-json.log"
+              tail_files: true
+              json.add_error_key: true
+              json.overwrite_keys: true
+              json.keys_under_root: true
+              processors:
+              - copy_fields:
+                  fields:
+                  - from: docker.container.labels.org_label-schema_name
+                    to: event.dataset
+                  fail_on_error: false
+                  ignore_missing: true
+        - condition:
+            contains:
+              docker.container.name: "heartbeat"
+          config:
+            - type: container
+              paths:
+                - "/var/lib/docker/containers/*/${data.docker.container.id}-json.log"
+              tail_files: true
+              json.add_error_key: true
+              json.overwrite_keys: true
+              json.keys_under_root: true
+              processors:
+              - copy_fields:
+                  fields:
+                  - from: docker.container.labels.org_label-schema_name
+                    to: event.dataset
+                  fail_on_error: false
+                  ignore_missing: true
+        - condition:
+            contains:
+              docker.container.name: "filebeat"
+          config:
+            - type: container
+              paths:
+                - "/var/lib/docker/containers/*/${data.docker.container.id}-json.log"
+              tail_files: true
+              json.add_error_key: true
+              json.overwrite_keys: true
+              json.keys_under_root: true
+              processors:
+              - copy_fields:
+                  fields:
+                  - from: docker.container.labels.org_label-schema_name
+                    to: event.dataset
+                  fail_on_error: false
+                  ignore_missing: true
+        - condition:
+            contains:
+              docker.container.name: "apm-server"
+          config:
+            - type: container
+              paths:
+                - "/var/lib/docker/containers/*/${data.docker.container.id}-json.log"
+              tail_files: true
+              json.add_error_key: true
+              json.overwrite_keys: true
+              json.keys_under_root: true
+              processors:
+              - rename:
+                  fields:
+                   - from: "error"
+                     to: "error_apm_server"
+                  ignore_missing: false
+                  fail_on_error: true
+              - copy_fields:
+                  fields:
+                  - from: docker.container.labels.org_label-schema_name
+                    to: event.dataset
+                  fail_on_error: false
+                  ignore_missing: true
+        - condition:
+            contains:
+              docker.container.image: redis
+          config:
+            - module: redis
+              log:
+                input:
+                  type: container
+                  paths:
+                    - /var/lib/docker/containers/*/${data.docker.container.id}-json.log
+        - condition:
+            contains:
+              docker.container.image: "postgres"
+          config:
+            - module: postgresql
+              log:
+                input:
+                  type: container
+                  paths:
+                    - "/var/lib/docker/containers/*/${data.docker.container.id}-json.log"
+        - condition:
+            and:
+              - not:
+                  contains:
+                    docker.container.name: "apm-server"
+              - not:
+                  contains:
+                    docker.container.name: "filebeat"
+              - not:
+                  contains:
+                    docker.container.name: "heartbeat"
+              - not:
+                  contains:
+                    docker.container.name: "kibana"
+              - not:
+                  contains:
+                    docker.container.name: "metricbeat"
+              - not:
+                  contains:
+                    docker.container.name: "opbeans-"
+              - not:
+                  contains:
+                    docker.container.name: "postgres"
+          config:
+            - type: container
+              paths:
+                - "/var/lib/docker/containers/*/${data.docker.container.id}-json.log"
+              tail_files: true
+              processors:
+              - copy_fields:
+                  fields:
+                  - from: docker.container.labels.org_label-schema_name
+                    to: event.dataset
+                  fail_on_error: false
+                  ignore_missing: true
 
 http.enabled: true
 http.host: localhost
