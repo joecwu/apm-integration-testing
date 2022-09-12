@@ -11,11 +11,80 @@ processors:
         name: DevOpsDays-Taipei-2022
 
 heartbeat.monitors:
+  - type: http
+    name: onedoggo training web
+    schedule: '@every 60s'
+    urls: ["https://training.onedoggo.com/"]
+    check.response.status: 200
+    tags: ["3rdParty"]
+    fields:
+      env: production
+  - type: http
+    name: "opbeans web"
+    schedule: '@every 10s'
+    urls: [
+      "http://opbeans-node:3000",
+      "http://opbeans-java:3000",
+      "http://opbeans-python:3000",
+      "http://opbeans-go:3000",
+      "http://opbeans-ruby:3000"
+      ]
+    check.response.status: 200
+    tags: ["web", "opbeans"]
+    fields:
+      env: production
+  - type: http
+    name: "opbeans web public access"
+    schedule: '@every 10s'
+    urls: [
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "http://localhost:3002",
+      "http://localhost:3003",
+      "http://localhost:8000"
+      ]
+    check.response.status: 200
+    tags: ["web", "opbeans"]
+    fields:
+      env: production
+  - type: tcp
+    name: redis healthcheck
+    schedule: '@every 5s'
+    hosts: ["redis:6379"]
+    tags: ["DB"]
+    fields:
+      env: production
 heartbeat.scheduler:
   limit: 10
 
 heartbeat.autodiscover:
   providers:
+    - type: docker
+      templates:
+        - condition:
+            contains:
+              docker.container.image: redis
+          config:
+            - type: tcp
+              name: "${data.docker.container.name}"
+              hosts: ["${data.host}:${data.port}"]
+              schedule: "@every 1s"
+              timeout: 1s
+              tags: ["DB", "container"]
+        - condition:
+            and:
+              - contains:
+                  docker.container.image: opbeans
+              - not:
+                  contains:
+                    docker.container.name: opbeans-load-generator
+          config:
+            - type: http
+              name: "${data.docker.container.name}"
+              urls: ["http://${data.host}:${data.port}"]
+              schedule: "@every 5s"
+              timeout: 1s
+              tags: ["opbeans","container"]
 
 http.enabled: true
 http.host: localhost
