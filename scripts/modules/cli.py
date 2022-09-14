@@ -850,7 +850,7 @@ class LocalSetup(object):
             '-F service_name="{service_name}" '
             '-F service_version="{service_version}" '
             '-F bundle_filepath="{bundle_path}" '
-            '-F sourcemap=@{sourcemap_file} '
+            '-F sourcemap=@/tmp/sourcemap '
             '{auth_header}'
             '{server_url}/v1/client-side/sourcemaps'
         ).format(
