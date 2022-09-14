@@ -115,8 +115,17 @@ python .\scripts\compose.py build --release --with-opbeans-java --with-opbeans-r
 ### 2. 安裝指令
 
 透過執行 `compose.py start` 產生並執行 `docker-compose.yml`。
+
+Mac or Linux: 
+
 ```
 ./scripts/compose.py start --release --with-opbeans-java --with-opbeans-ruby --with-opbeans-python --with-opbeans-go --with-opbeans-node --with-opbeans-rum --with-filebeat --with-metricbeat --with-heartbeat 8.4.1
+```
+
+Windows: 
+
+```
+python .\scripts\compose.py start --release --with-opbeans-java --with-opbeans-ruby --with-opbeans-python --with-opbeans-go --with-opbeans-node --with-opbeans-rum --with-filebeat --with-metricbeat --with-heartbeat 8.4.1
 ```
 
 :::warning
@@ -124,8 +133,17 @@ python .\scripts\compose.py build --release --with-opbeans-java --with-opbeans-r
 建議最少要啟動 `opbeans-node` 及 `opbeans-rum`。
 
 例如：
+
+Mac or Linux: 
+
 ```
 ./scripts/compose.py start --release --with-opbeans-python --with-opbeans-go --with-opbeans-node --with-opbeans-rum --with-filebeat --with-metricbeat --with-heartbeat 8.4.1
+```
+
+Windows:
+
+```
+python .\scripts\compose.py start --release --with-opbeans-python --with-opbeans-go --with-opbeans-node --with-opbeans-rum --with-filebeat --with-metricbeat --with-heartbeat 8.4.1
 ```
 :::
 
@@ -146,7 +164,7 @@ python .\scripts\compose.py build --release --with-opbeans-java --with-opbeans-r
 
 ### 5. 查看 Kibana > Stack Monitoring
 
-進入 [Kibana > Stack Monitoring](http://localhost:5601/app/monitoring)，可以成功查看 Elasticsearch Cluster 正常的運作，同時也有 Kibana 與 3 個 beats 正在運作中。
+進入 [Kibana > Stack Monitoring](http://localhost:5601/app/monitoring)，可以成功查看 Elasticsearch Cluster 正常的運作，同時也有 Kibana 正在運作中。
 
 ![](https://i.imgur.com/bcEG3uS.png)
 
@@ -190,7 +208,7 @@ filebeat.autodiscover:
                     - error
               - copy_fields:
                   fields:
-                  - from: container.name
+                  - from: docker.container.labels.org_label-schema_name
                     to: event.dataset
                   fail_on_error: false
                   ignore_missing: true
@@ -213,7 +231,7 @@ filebeat.autodiscover:
                   target: "parser_type"
               - copy_fields:
                   fields:
-                  - from: container.name
+                  - from: docker.container.labels.org_label-schema_name
                     to: event.dataset
                   fail_on_error: false
                   ignore_missing: true
@@ -231,7 +249,7 @@ filebeat.autodiscover:
               processors:
               - copy_fields:
                   fields:
-                  - from: container.name
+                  - from: docker.container.labels.org_label-schema_name
                     to: event.dataset
                   fail_on_error: false
                   ignore_missing: true
@@ -249,7 +267,7 @@ filebeat.autodiscover:
               processors:
               - copy_fields:
                   fields:
-                  - from: container.name
+                  - from: docker.container.labels.org_label-schema_name
                     to: event.dataset
                   fail_on_error: false
                   ignore_missing: true
@@ -267,7 +285,7 @@ filebeat.autodiscover:
               processors:
               - copy_fields:
                   fields:
-                  - from: container.name
+                  - from: docker.container.labels.org_label-schema_name
                     to: event.dataset
                   fail_on_error: false
                   ignore_missing: true
@@ -285,7 +303,7 @@ filebeat.autodiscover:
               processors:
               - copy_fields:
                   fields:
-                  - from: container.name
+                  - from: docker.container.labels.org_label-schema_name
                     to: event.dataset
                   fail_on_error: false
                   ignore_missing: true
@@ -303,7 +321,7 @@ filebeat.autodiscover:
               processors:
               - copy_fields:
                   fields:
-                  - from: container.name
+                  - from: docker.container.labels.org_label-schema_name
                     to: event.dataset
                   fail_on_error: false
                   ignore_missing: true
@@ -327,7 +345,7 @@ filebeat.autodiscover:
                   fail_on_error: true
               - copy_fields:
                   fields:
-                  - from: container.name
+                  - from: docker.container.labels.org_label-schema_name
                     to: event.dataset
                   fail_on_error: false
                   ignore_missing: true
@@ -382,7 +400,7 @@ filebeat.autodiscover:
               processors:
               - copy_fields:
                   fields:
-                  - from: container.name
+                  - from: docker.container.labels.org_label-schema_name
                     to: event.dataset
                   fail_on_error: false
                   ignore_missing: true
@@ -633,12 +651,13 @@ heartbeat.monitors:
 ```
 
 
-
 ## 任務六：設定異常時的主動通知 - Alert
 
 ### 1. Service Level Indicator & Objective - 1
 
 建立新的 Alert，選擇 Rule Type 為 **Uptime monitor status**，並依照需求填入設定。
+
+依需求建立 `Web Uptime SLI-1`
 
 ![](https://i.imgur.com/7tSfu14.png)
 
