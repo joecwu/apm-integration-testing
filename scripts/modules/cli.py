@@ -33,10 +33,6 @@ from .opbeans import (  # noqa: F401
     OpbeansGo, OpbeansJava, OpbeansLoadGenerator, OpbeansGo01, OpbeansDotnet01,
     OpbeansJava01, OpbeansNode01, OpbeansPython01, OpbeansRuby01
 )
-from .apm_agents import (  # noqa: F401
-    AgentDotnet, AgentGoNetHttp, AgentJavaSpring, AgentNodejsExpress, AgentPhpApache,
-    AgentPython, AgentPythonDjango, AgentPythonFlask, AgentRubyRails, AgentRUMJS
-)
 
 
 PACKAGE_NAME = 'localmanager'
@@ -84,13 +80,20 @@ class LocalSetup(object):
         '7.14': '7.14.2',
         '7.15': '7.15.2',
         '7.16': '7.16.3',
-        '7.17': '7.17.1',
+        '7.17': '7.17.8',
         '8.1': '8.1.3',
         '8.2': '8.2.3',
         '8.3': '8.3.3',
-        '8.4': '8.4.1',
-        'main': '8.4.1',
-        'master': '8.4.1',  # keep master alias for backward compatibility. Upgrade the main alias only
+        '8.4': '8.4.3',
+        '8.5': '8.5.3',
+        '8.6': '8.6.2',
+        '8.7': '8.7.1',
+        '8.8': '8.8.1',
+        '8.9': '8.9.0',
+        '8.10': '8.10.0',
+        # UPDATECLI_AUTOMATION
+        "main": "8.10.0",
+        "master": "8.10.0",  # keep master alias for backward compatibility. Upgrade the main alias only
     }
 
     def __init__(self, argv=None, services=None):

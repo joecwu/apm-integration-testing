@@ -33,15 +33,6 @@ function prepareAndRunAll() {
   export PYTHONHTTPSVERIFY=0
   DEFAULT_COMPOSE_ARGS="${ELASTIC_STACK_VERSION} ${BUILD_OPTS}\
     --no-apm-server-self-instrument \
-    --with-agent-rumjs \
-    --with-agent-dotnet \
-    --with-agent-go-net-http \
-    --with-agent-nodejs-express \
-    --with-agent-php-apache \
-    --with-agent-ruby-rails \
-    --with-agent-java-spring \
-    --with-agent-python-django \
-    --with-agent-python-flask \
     --apm-server-enable-tls \
     --no-verify-server-cert  \
     --apm-server-secret-token=${ELASTIC_APM_SECRET_TOKEN} \
@@ -74,9 +65,12 @@ if [ -z "${DISABLE_BUILD_PARALLEL}" ] || [ "${DISABLE_BUILD_PARALLEL}" = "false"
  BUILD_OPTS="${BUILD_OPTS} --build-parallel"
 fi
 
-ELASTIC_STACK_VERSION=${ELASTIC_STACK_VERSION:-'8.4.1'}
+ELASTIC_STACK_VERSION=${ELASTIC_STACK_VERSION:-"8.8.1"}
 
 echo "ELASTIC_STACK_VERSION=${ELASTIC_STACK_VERSION}"
 echo "APM_SERVER_BRANCH_VERSION=${APM_SERVER_BRANCH_VERSION}"
 echo "APM_SERVER_BRANCH_TYPE=${APM_SERVER_BRANCH_TYPE}"
 echo "BUILD_OPTS=${BUILD_OPTS}"
+
+# Install virtualenv
+python3 -m pip install --user virtualenv

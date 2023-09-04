@@ -1,0 +1,95 @@
+---
+name: Bump elastic stack to latest version
+
+actions:
+  default:
+    title: '[updatecli] Bump elastic stack version to {{ source "latestRelease" }}/{{ source "major-minor-patch" }}'
+    kind: github/pullrequest
+    spec:
+      labels:
+        - automation
+        - dependencies
+        - backport-skip
+    scmid: default
+
+scms:
+  default:
+    kind: github
+    spec:
+      user: '{{ requiredEnv "GIT_USER" }}'
+      email: '{{ requiredEnv "GIT_EMAIL" }}'
+      owner: elastic
+      repository: apm-integration-testing
+      token: '{{ requiredEnv "GITHUB_TOKEN" }}'
+      username: '{{ requiredEnv "GIT_USER" }}'
+      branch: main
+
+sources:
+  latestRelease:
+    name: Get Latest Elastic Release
+    kind: githubrelease
+    transformers:
+      - trimprefix: v
+    spec:
+      owner: elastic
+      repository: elasticsearch
+      token: '{{ requiredEnv "GITHUB_TOKEN" }}'
+      username: '{{ requiredEnv "GIT_USER" }}'
+      versionfilter:
+        kind: regex
+        pattern: ^v8\.(\d+)\.(\d+)$
+
+  latestVersion:
+    name: Get latest snapshot build for main
+    kind: json
+    spec:
+      file: https://storage.googleapis.com/artifacts-api/snapshots/main.json
+      key: .version
+
+  major-minor-patch:
+    name: Get major-minor-patch version
+    kind: shell
+    dependson:
+      - latestVersion
+    transformers:
+      - findsubmatch:
+          pattern: '^(\d+.\d+.\d+)-.+$'
+          captureindex: 1
+    spec:
+      command: echo {{ source "latestVersion" }}
+
+conditions:
+  dockerTag:
+    name: Is docker image elasticsearch:{{ source "latestRelease" }} published
+    kind: dockerimage
+    spec:
+      image: elasticsearch
+      tag: '{{ source "latestRelease" }}'
+    sourceid: latestRelease
+
+targets:
+  update-common-sh:
+    name: 'Update elastic stack version to {{ source "latestRelease" }}'
+    sourceid: latestRelease
+    scmid: default
+    kind: file
+    spec:
+      file: .ci/scripts/common.sh
+      content: '"{{ source `latestRelease` }}"'
+      matchpattern: '"[0-9]+\.[0-9]+\.[0-9]+"'
+
+  update-release-cli-py:
+    name: 'Update elastic stack version to {{ source "latestRelease" }} (release)'
+    sourceid: latestRelease
+    scmid: default
+    kind: shell
+    spec:
+      command: bash .ci/bump-stack-release-version.sh
+
+  update-bc-cli-py:
+    name: 'Update elastic stack version to {{ source "major-minor-patch" }} (bc)'
+    sourceid: major-minor-patch
+    scmid: default
+    kind: shell
+    spec:
+      command: bash .ci/bump-stack-release-version.sh
