@@ -6,7 +6,7 @@
   },
   "services": {
     "apm-server": {
-      "container_name": "localtesting_8.4.1_apm-managed",
+      "container_name": "localtesting_8.9.0_apm-managed",
       "depends_on": {
         "kibana": {
           "condition": "service_healthy"
@@ -31,9 +31,9 @@
           "/bin/true"
         ]
       },
-      "image": "docker.elastic.co/beats/elastic-agent:8.4.1",
+      "image": "docker.elastic.co/beats/elastic-agent:8.9.0",
       "labels": [
-        "co.elastic.apm.stack-version=8.4.1"
+        "co.elastic.apm.stack-version=8.9.0"
       ],
       "logging": {
         "driver": "json-file",
@@ -53,7 +53,7 @@
       ]
     },
     "elasticsearch": {
-      "container_name": "localtesting_8.4.1_elasticsearch",
+      "container_name": "localtesting_8.9.0_elasticsearch",
       "environment": [
         "bootstrap.memory_lock=true",
         "cluster.name=docker-cluster",
@@ -61,7 +61,7 @@
         "discovery.type=single-node",
         "path.repo=/usr/share/elasticsearch/data/backups",
         "ES_JAVA_OPTS=-Xms1g -Xmx1g",
-        "path.data=/usr/share/elasticsearch/data/8.4.1",
+        "path.data=/usr/share/elasticsearch/data/8.9.0",
         "indices.id_field_data.enabled=true",
         "action.destructive_requires_name=false",
         "xpack.security.authc.anonymous.roles=remote_monitoring_collector",
@@ -81,9 +81,9 @@
           "curl -s -k http://localhost:9200/_cluster/health | grep -vq '\"status\":\"red\"'"
         ]
       },
-      "image": "docker.elastic.co/elasticsearch/elasticsearch:8.4.1",
+      "image": "docker.elastic.co/elasticsearch/elasticsearch:8.9.0",
       "labels": [
-        "co.elastic.apm.stack-version=8.4.1",
+        "co.elastic.apm.stack-version=8.9.0",
         "co.elastic.metrics/module=elasticsearch",
         "co.elastic.metrics/metricsets=node,node_stats",
         "co.elastic.metrics/hosts=http://$${data.host}:9200"
@@ -128,7 +128,7 @@
         "-E",
         "output.elasticsearch.enabled=true"
       ],
-      "container_name": "localtesting_8.4.1_filebeat",
+      "container_name": "localtesting_8.9.0_filebeat",
       "depends_on": {
         "elasticsearch": {
           "condition": "service_healthy"
@@ -155,7 +155,7 @@
         ],
         "timeout": "5s"
       },
-      "image": "docker.elastic.co/beats/filebeat:8.4.1",
+      "image": "docker.elastic.co/beats/filebeat:8.9.0",
       "logging": {
         "driver": "json-file",
         "options": {
@@ -185,7 +185,7 @@
         "-E",
         "output.elasticsearch.enabled=true"
       ],
-      "container_name": "localtesting_8.4.1_heartbeat",
+      "container_name": "localtesting_8.9.0_heartbeat",
       "depends_on": {
         "elasticsearch": {
           "condition": "service_healthy"
@@ -209,7 +209,7 @@
         ],
         "timeout": "5s"
       },
-      "image": "docker.elastic.co/beats/heartbeat:8.4.1",
+      "image": "docker.elastic.co/beats/heartbeat:8.9.0",
       "logging": {
         "driver": "json-file",
         "options": {
@@ -226,7 +226,7 @@
       ]
     },
     "kibana": {
-      "container_name": "localtesting_8.4.1_kibana",
+      "container_name": "localtesting_8.9.0_kibana",
       "depends_on": {
         "elasticsearch": {
           "condition": "service_healthy"
@@ -264,9 +264,9 @@
           "curl -s -k http://kibana:5601/api/status | grep -q 'All services are available'"
         ]
       },
-      "image": "docker.elastic.co/kibana/kibana:8.4.1",
+      "image": "docker.elastic.co/kibana/kibana:8.9.0",
       "labels": [
-        "co.elastic.apm.stack-version=8.4.1"
+        "co.elastic.apm.stack-version=8.9.0"
       ],
       "logging": {
         "driver": "json-file",
@@ -298,7 +298,7 @@
         "-E",
         "output.elasticsearch.enabled=true"
       ],
-      "container_name": "localtesting_8.4.1_metricbeat",
+      "container_name": "localtesting_8.9.0_metricbeat",
       "depends_on": {
         "elasticsearch": {
           "condition": "service_healthy"
@@ -327,7 +327,7 @@
         ],
         "timeout": "5s"
       },
-      "image": "docker.elastic.co/beats/metricbeat:8.4.1",
+      "image": "docker.elastic.co/beats/metricbeat:8.9.0",
       "logging": {
         "driver": "json-file",
         "options": {
@@ -343,8 +343,8 @@
       ]
     },
     "opbeans-go": {
-      "image": "joecwu/opbeans-go:latest",
-      "container_name": "localtesting_8.4.1_opbeans-go",
+      "image": "onedoggo/opbeans-go:arm64v8_8.9.0",
+      "container_name": "localtesting_8.9.0_opbeans-go",
       "depends_on": {
         "elasticsearch": {
           "condition": "service_healthy"
@@ -389,8 +389,8 @@
       ]
     },
     "opbeans-java": {
-      "image": "joecwu/opbeans-java:latest",
-      "container_name": "localtesting_latest_opbeans-java",
+      "image": "onedoggo/opbeans-java:amd64_8.9.0",
+      "container_name": "localtesting_8.9.0_opbeans-java",
       "depends_on": {
         "elasticsearch": {
           "condition": "service_healthy"
@@ -450,7 +450,8 @@
       ]
     },
     "opbeans-load-generator": {
-      "container_name": "localtesting_8.4.1_opbeans-load-generator",
+      "image": "onedoggo/opbeans-loadgen:amd64_8.9.0",
+      "container_name": "localtesting_8.9.0_opbeans-load-generator",
       "depends_on": {
         "opbeans-go": {
           "condition": "service_healthy"
@@ -470,7 +471,6 @@
         "OPBEANS_URLS=opbeans-go:http://opbeans-go:3000,opbeans-java:http://opbeans-java:3000,opbeans-python:http://opbeans-python:3000,opbeans-ruby:http://opbeans-ruby:3000",
         "OPBEANS_RPMS=opbeans-go:100,opbeans-java:100,opbeans-python:100,opbeans-ruby:100"
       ],
-      "image": "joecwu/opbeans-loadgen:latest",
       "logging": {
         "driver": "json-file",
         "options": {
@@ -483,8 +483,8 @@
       ]
     },
     "opbeans-node": {
-      "image": "joecwu/opbeans-node:latest",
-      "container_name": "localtesting_latest_opbeans-node",
+      "image": "onedoggo/opbeans-node:amd64_8.9.0",
+      "container_name": "localtesting_8.9.0_opbeans-node",
       "depends_on": {
         "postgres": {
           "condition": "service_healthy"
@@ -550,8 +550,8 @@
       ]
     },
     "opbeans-python": {
-      "image": "joecwu/opbeans-python:latest",
-      "container_name": "localtesting_latest_opbeans-python",
+      "image": "onedoggo/opbeans-python:amd64_8.9.0",
+      "container_name": "localtesting_8.9.0_opbeans-python",
       "depends_on": {
         "elasticsearch": {
           "condition": "service_healthy"
@@ -618,8 +618,8 @@
       ]
     },
     "opbeans-ruby": {
-      "image": "joecwu/opbeans-ruby:latest",
-      "container_name": "localtesting_latest_opbeans-ruby",
+      "image": "onedoggo/opbeans-ruby:amd64_8.9.0",
+      "container_name": "localtesting_8.9.0_opbeans-ruby",
       "depends_on": {
         "elasticsearch": {
           "condition": "service_healthy"
@@ -678,11 +678,11 @@
       ]
     },
     "opbeans-rum": {
-      "image": "joecwu/opbeans-rum:latest",
+      "image": "onedoggo/opbeans-rum:arm64v8_8.9.0",
       "cap_add": [
         "SYS_ADMIN"
       ],
-      "container_name": "localtesting_8.4.1_opbeans-rum",
+      "container_name": "localtesting_8.9.0_opbeans-rum",
       "depends_on": {
         "opbeans-node": {
           "condition": "service_healthy"
@@ -721,7 +721,7 @@
       ]
     },
     "postgres": {
-      "container_name": "localtesting_8.4.1_postgres",
+      "container_name": "localtesting_8.9.0_postgres",
       "environment": [
         "POSTGRES_DB=opbeans",
         "POSTGRES_PASSWORD=verysecure"
@@ -755,7 +755,7 @@
     },
     "redis": {
       "command": "--save ''",
-      "container_name": "localtesting_8.4.1_redis",
+      "container_name": "localtesting_8.9.0_redis",
       "healthcheck": {
         "interval": "10s",
         "test": [
